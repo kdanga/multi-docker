@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t kdanga/react-test -f ./client/Dockerfile.dev ./client
+
+scripts:
+  - docker run -e CI=true kdanga/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t kdanga/multi-client ./client
+  - docker build -t kdanga/multi-nginx ./nginx
+  - docker build -t kdanga/multi-server ./server
+  - docker build -t kdanga/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push to docker hub
+  - docker push kdanga/multi-client
+  - docker push kdanga/multi-nginx
+  - docker push kdanga/multi-server
+  - docker push kdanga/multi-worker
